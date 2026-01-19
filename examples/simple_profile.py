@@ -39,18 +39,31 @@ def main():
     # Create profiler
     profiler = CPUProfiler()
 
+    # Use decorators to profile functions
+    @profiler.profile_function
+    def run_fibonacci():
+        return fibonacci(15)
+
+    @profiler.profile_function
+    def run_heavy_computation():
+        return heavy_computation()
+
+    @profiler.profile_function
+    def run_light_computation():
+        return light_computation()
+
     # Start profiling
     profiler.start()
 
     # Profile some code
     print("Running code...")
     for _ in range(3):
-        heavy_computation()
+        run_heavy_computation()
 
     for _ in range(10):
-        light_computation()
+        run_light_computation()
 
-    fibonacci(15)
+    run_fibonacci()
 
     # Stop profiling
     profiler.stop()
@@ -61,8 +74,11 @@ def main():
     # Alternatively, use console reporter
     print("\n\nUsing ConsoleReporter:")
     stats = profiler.get_stats()
-    reporter = ConsoleReporter(top_n=10)
-    reporter.report(stats)
+    if stats:
+        reporter = ConsoleReporter(top_n=10)
+        reporter.report(stats)
+    else:
+        print("No statistics available")
 
 
 if __name__ == "__main__":

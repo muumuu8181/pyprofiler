@@ -34,24 +34,37 @@ def main():
     # Create profiler
     profiler = CPUProfiler()
 
+    # Use decorators to profile functions
+    @profiler.profile_function
+    def run_process_data():
+        return process_data()
+
+    # Start profiling
+    profiler.start()
+
     # Profile code
-    with profiler.profile():
-        for _ in range(5):
-            process_data()
+    for _ in range(5):
+        run_process_data()
+
+    # Stop profiling
+    profiler.stop()
 
     # Generate flame graph
     stats = profiler.get_stats()
-    reporter = FlameGraphReporter()
+    if stats:
+        reporter = FlameGraphReporter()
 
-    # Generate JSON
-    reporter.report(stats, output='flamegraph.json')
+        # Generate JSON
+        reporter.report(stats, output='flamegraph.json')
 
-    # Generate HTML
-    reporter.generate_html(stats, output='flamegraph.html')
+        # Generate HTML
+        reporter.generate_html(stats, output='flamegraph.html')
 
-    print("\nFlame graphs generated!")
-    print("  - flamegraph.json (Chrome DevTools format)")
-    print("  - flamegraph.html (standalone viewer)")
+        print("\nFlame graphs generated!")
+        print("  - flamegraph.json (Chrome DevTools format)")
+        print("  - flamegraph.html (standalone viewer)")
+    else:
+        print("No profiling data available")
 
 
 if __name__ == "__main__":
