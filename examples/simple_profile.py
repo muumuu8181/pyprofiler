@@ -8,8 +8,8 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from profiler import CPUProfiler
-from reporters import ConsoleReporter
+from pyprofiler import CPUProfiler
+from pyprofiler.reporters.console import ConsoleReporter
 
 
 def fibonacci(n: int) -> int:

@@ -8,7 +8,7 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from memory_profiler import MemoryProfiler
+from pyprofiler import MemoryProfiler
 
 
 def allocate_memory():

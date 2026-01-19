@@ -1,60 +1,41 @@
 """
 Memory profiler for tracking memory usage
+
+Uses tracemalloc to automatically track memory allocations.
 """
 import sys
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple
 from collections import defaultdict
+import tracemalloc
 
 
 class MemoryProfiler:
     """
-    Memory profiler for tracking object allocations and memory usage
+    Memory profiler for tracking memory allocations automatically
 
-    Note: This is a simplified implementation. For production use,
-    consider using tools like memory_profiler or tracemalloc.
+    Uses Python's built-in tracemalloc module to track memory allocations
+    without requiring manual object tracking.
     """
 
     def __init__(self):
         self._snapshots = []
-        self._object_tracker = defaultdict(int)
         self._is_running = False
+        self._start_snapshot = None
 
     def start(self) -> None:
         """Start memory profiling"""
-        self._is_running = True
-        self._take_snapshot()
+        if not self._is_running:
+            tracemalloc.start()
+            self._start_snapshot = tracemalloc.take_snapshot()
+            self._is_running = True
 
     def stop(self) -> None:
         """Stop memory profiling"""
-        self._is_running = False
-        self._take_snapshot()
-
-    def track_object(self, obj: Any) -> None:
-        """
-        Track an object's memory allocation
-
-        Args:
-            obj: Object to track
-        """
-        if not self._is_running:
-            return
-
-        obj_type = type(obj).__name__
-        size = sys.getsizeof(obj)
-        self._object_tracker[obj_type] += size
-
-    def _take_snapshot(self) -> None:
-        """Take a snapshot of current memory usage"""
-        import gc
-
-        # Force garbage collection to get accurate numbers
-        gc.collect()
-
-        snapshot = {
-            'objects': dict(self._object_tracker),
-            'total': sum(self._object_tracker.values())
-        }
-        self._snapshots.append(snapshot)
+        if self._is_running:
+            snapshot = tracemalloc.take_snapshot()
+            self._snapshots.append((self._start_snapshot, snapshot))
+            tracemalloc.stop()
+            self._is_running = False
 
     def get_stats(self) -> Dict[str, Any]:
         """
@@ -66,17 +47,28 @@ class MemoryProfiler:
         if not self._snapshots:
             return {}
 
-        first = self._snapshots[0]
-        last = self._snapshots[-1]
+        # Use the most recent profiling session
+        start_snapshot, end_snapshot = self._snapshots[-1]
+
+        # Calculate total memory growth
+        start_stats = start_snapshot.statistics('lineno')
+        end_stats = end_snapshot.statistics('lineno')
+
+        start_total = sum(stat.size for stat in start_stats)
+        end_total = sum(stat.size for stat in end_stats)
+        growth = end_total - start_total
+
+        # Get top memory allocations
+        top_stats = end_stats[:10]
 
         return {
-            'initial_total': first['total'],
-            'final_total': last['total'],
-            'growth': last['total'] - first['total'],
-            'object_types': last['objects']
+            'initial_total': start_total,
+            'final_total': end_total,
+            'growth': growth,
+            'top_stats': top_stats
         }
 
-    def print_stats(self) -> None:
+    def print_stats(self, top_n: int = 10) -> None:
         """Print memory statistics to console"""
         stats = self.get_stats()
         if not stats:
@@ -84,20 +76,13 @@ class MemoryProfiler:
             return
 
         print("\nMemory Statistics:")
-        print(f"  Initial: {stats['initial_total']:,} bytes")
-        print(f"  Final: {stats['final_total']:,} bytes")
-        print(f"  Growth: {stats['growth']:+,} bytes")
-        print("\nTop object types:")
+        print(f"  Initial: {stats['initial_total']:,} bytes ({stats['initial_total'] / 1024:.2f} KB)")
+        print(f"  Final:   {stats['final_total']:,} bytes ({stats['final_total'] / 1024:.2f} KB)")
+        print(f"  Growth:  {stats['growth']:+,} bytes ({stats['growth'] / 1024:+.2f} KB)")
+        print(f"\nTop {top_n} memory allocations:")
 
-        # Sort by size
-        sorted_objects = sorted(
-            stats['object_types'].items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
-
-        for obj_type, size in sorted_objects[:10]:
-            print(f"  {obj_type:<30} {size:>12,} bytes")
+        for stat in stats['top_stats'][:top_n]:
+            print(f"  {stat}")
 
 
 __all__ = ['MemoryProfiler']
