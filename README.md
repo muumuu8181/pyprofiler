@@ -126,6 +126,40 @@ graph = generator.generate(profiler.call_stack)
 generator.to_html(graph, 'flamegraph.html')
 ```
 
+### メモリプロファイリング
+
+```python
+from pyprofiler import MemoryProfiler
+
+# プロファイラーを作成
+profiler = MemoryProfiler()
+
+# プロファイリング開始
+profiler.start()
+
+# メモリを割り当てる処理
+data = allocate_memory()
+process_data(data)
+
+# プロファイリング終了
+profiler.stop()
+
+# 結果を表示
+profiler.print_stats()
+```
+
+**出力例**:
+```
+Memory Statistics:
+  Initial: 0 bytes (0.00 KB)
+  Final:   862,552 bytes (842.34 KB)
+  Growth:  +862,552 bytes (+842.34 KB)
+
+Top 10 memory allocations:
+  examples/memory_profile.py:18: size=841 KiB, count=1930, average=446 B
+  examples/memory_profile.py:26: size=864 B, count=1, average=864 B
+```
+
 ---
 
 ## 📊 出力例
