@@ -248,3 +248,14 @@ python examples/memory_profile.py
 
 **作成者**: Claude (Sonnet 4.5)
 **最終更新**: 2026-01-18
+
+## Code Review Request
+
+This PR requests a comprehensive code review of the entire repository.
+
+Please review:
+- Security vulnerabilities
+- Performance optimizations
+- Potential bugs
+- Code quality improvements
+- Best practices
