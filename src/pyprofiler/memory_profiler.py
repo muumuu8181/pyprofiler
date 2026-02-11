@@ -13,6 +13,7 @@ import tracemalloc
 class MemoryProfiler:
     """
     Memory profiler for tracking memory allocations automatically
+Examples:        >>> profiler = MemoryProfiler()        >>> profiler.start()        >>> # Your code here        >>> profiler.stop()        >>> stats = profiler.profile_object_types()    
 
     Uses Python's built-in tracemalloc module to track memory allocations
     without requiring manual object tracking.
